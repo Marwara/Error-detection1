@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Error Detection Methods — Year 10 Computer Science Workbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eef1f6; --paper-deep:#e2e7f0; --rule:#c3cede;
+    --ink:#1b2a4a; --ink-soft:#45526e;
+    --accent:#e0962c; --accent-deep:#b6740f;
+    --teal:#3e8e82; --coral:#c1554d; --purple:#6c6fbf;
+    --code-bg:#16223b; --code-text:#dbe4f5; --code-key:#7fb3ff; --code-str:#ffcf7f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper-deep);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.55;}
+  h1,h2,h3{font-family:'Bitter',Georgia,serif;color:var(--ink);margin:0 0 .4em 0;}
+  .page{max-width:980px;margin:0 auto;background:var(--paper);min-height:100vh;box-shadow:0 0 0 1px var(--rule);}
+  .cover{padding:38px 48px 28px 68px;border-bottom:3px solid var(--ink);position:relative;}
+  .cover::before{content:"";position:absolute;left:38px;top:0;bottom:0;width:2px;background:var(--coral);opacity:.55;}
+  .cover .tag{display:inline-block;font-size:.78rem;color:var(--ink-soft);border:1px solid var(--rule);padding:3px 10px;background:#fff;margin-bottom:14px;}
+  .cover h1{font-size:1.85rem;max-width:22ch;}
+  .cover p.sub{color:var(--ink-soft);max-width:60ch;margin-top:6px;}
+  .fields{display:flex;gap:28px;margin-top:22px;flex-wrap:wrap;}
+  .fields label{font-size:.85rem;color:var(--ink-soft);}
+  .fields input{display:block;margin-top:4px;border:none;border-bottom:1px solid var(--ink-soft);background:transparent;font-size:.95rem;padding:3px 2px;width:170px;color:var(--ink);}
+  .fields input:focus{outline:2px solid var(--accent);outline-offset:2px;}
+
+  section{padding:34px 48px 34px 68px;border-bottom:1px solid var(--rule);position:relative;}
+  section::before{content:"";position:absolute;left:38px;top:0;bottom:0;width:2px;background:var(--rule);}
+  .num{position:absolute;left:20px;top:36px;font-family:'Bitter',serif;font-size:.85rem;color:var(--ink-soft);background:var(--paper);padding:0 4px;}
+  section h2{font-size:1.3rem;}
+  section > p.lead{color:var(--ink-soft);max-width:70ch;}
+
+  .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
+  @media (max-width:640px){ .concept-grid{grid-template-columns:1fr;} }
+  .concept{border:1px solid var(--rule);background:#fff;padding:15px 17px;cursor:pointer;}
+  .concept .term{font-family:'Bitter',serif;font-weight:700;font-size:1rem;display:flex;justify-content:space-between;align-items:center;}
+  .concept .term .plus{color:var(--accent-deep);font-size:1.2rem;}
+  .concept .detail{max-height:0;overflow:hidden;transition:max-height .25s ease;color:var(--ink-soft);font-size:.87rem;}
+  .concept.open .detail{max-height:300px;margin-top:8px;}
+  .concept.open .plus{transform:rotate(45deg);display:inline-block;}
+  .concept .example{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.76rem;background:var(--paper);padding:6px 8px;border-left:3px solid var(--accent);}
+
+  .chip{display:inline-block;font-size:.66rem;font-weight:600;padding:2px 8px;border-radius:11px;margin-right:5px;color:#fff;white-space:nowrap;}
+  .chip.a{background:var(--purple);} .chip.b{background:var(--teal);}
+  .chip.c{background:var(--accent-deep);} .chip.d{background:var(--coral);}
+
+  .tabbar{display:flex;gap:4px;margin-top:12px;border-bottom:2px solid var(--rule);flex-wrap:wrap;}
+  .tab{padding:9px 14px;font-size:.84rem;font-weight:600;color:var(--ink-soft);background:transparent;border:none;cursor:pointer;border-bottom:3px solid transparent;font-family:'Inter',sans-serif;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent-deep);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+
+  .lab-grid{margin-top:18px;display:grid;grid-template-columns:1fr 1.4fr;gap:20px;}
+  @media (max-width:820px){ .lab-grid{grid-template-columns:1fr;} }
+  .controls{border:1px solid var(--rule);background:#fff;padding:16px;}
+  .ctrl{margin-bottom:15px;}
+  .ctrl label{display:flex;justify-content:space-between;align-items:center;font-size:.83rem;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+  .ctrl input[type=number], .ctrl input[type=text], .ctrl select{width:100%;padding:6px 8px;border:1px solid var(--rule);font-family:'Inter',sans-serif;font-size:.83rem;background:var(--paper);}
+  .note-box{font-size:.78rem;color:var(--ink-soft);margin-top:8px;font-style:italic;}
+
+  .bit-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+  .bit-btn{width:30px;height:30px;border:1px solid var(--rule);background:var(--paper);font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;font-size:.85rem;}
+  .bit-btn.on{background:var(--ink);color:#fff;}
+
+  .digit-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+  .digit-row input{width:34px;height:34px;text-align:center;border:1px solid var(--rule);font-family:'JetBrains Mono',monospace;font-size:.9rem;padding:0;}
+
+  .panels{display:flex;flex-direction:column;gap:12px;}
+  .panel{border:1px solid var(--rule);background:#fff;}
+  .panel .head{padding:8px 12px;font-size:.75rem;font-weight:600;color:var(--ink-soft);border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
+  .panel .info{cursor:help;border:1px solid var(--ink-soft);border-radius:50%;width:15px;height:15px;font-size:.64rem;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-soft);}
+  .panel .body{padding:12px;font-size:.83rem;}
+  .panel.formula .body ol{margin:0;padding-left:18px;}
+  .panel.formula .body li{margin-bottom:5px;}
+  .panel.sub .body{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:var(--paper);white-space:pre-wrap;}
+  .panel.result .body{background:var(--code-bg);color:var(--code-text);font-family:'JetBrains Mono',monospace;font-size:.8rem;white-space:pre-wrap;}
+  .panel.result .body .hi{color:var(--code-key);font-weight:600;}
+  .panel.result .body .fin{color:var(--code-str);font-weight:600;}
+  .panel.result .body .bad{color:#ff9d8f;font-weight:600;}
+
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;padding:8px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;}
+  .btn.secondary{background:transparent;color:var(--ink);}
+  .btn-row{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+  .log-box{margin-top:14px;border:1px solid var(--rule);background:#fff;padding:14px;min-height:50px;}
+  .log-box .line{font-family:'JetBrains Mono',monospace;font-size:.79rem;margin-bottom:4px;color:var(--ink-soft);}
+  .log-box .line.cur{color:var(--ink);font-weight:600;}
+  .log-box .line .tag{font-size:.62rem;padding:1px 6px;border-radius:8px;color:#fff;margin-right:6px;}
+  .empty-note{color:var(--ink-soft);font-size:.82rem;font-style:italic;}
+
+  .grid4{display:inline-grid;grid-template-columns:repeat(5, 34px);gap:3px;margin-top:6px;}
+  .cell{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;border:1px solid var(--rule);background:#fff;cursor:pointer;font-size:.85rem;}
+  .cell.parity{background:var(--paper);cursor:default;color:var(--ink-soft);}
+  .cell.corner{background:var(--paper-deep);cursor:default;}
+  .cell.mismatch{background:#faeceb;border-color:var(--coral);color:var(--coral);}
+  .cell.flipped{outline:2px solid var(--accent-deep);}
+
+  .echo-flow{display:flex;flex-direction:column;gap:6px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:.82rem;}
+  .echo-flow .step{padding:6px 10px;border:1px solid var(--rule);background:#fff;}
+  .echo-flow .step.bad{border-color:var(--coral);background:#faeceb;}
+  .echo-flow .step.good{border-color:var(--teal);background:#eaf5f3;}
+
+  .q{border:1px solid var(--rule);background:#fff;padding:16px;margin-top:16px;}
+  .q p.prompt{font-weight:600;margin:0 0 10px 0;}
+  .opts{display:flex;flex-direction:column;gap:6px;}
+  .opt{text-align:left;padding:8px 10px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;font-family:'Inter',sans-serif;font-size:.87rem;}
+  .opt:hover{border-color:var(--accent-deep);}
+  .opt.correct{background:#eaf5f3;border-color:var(--teal);}
+  .opt.wrong{background:#faeceb;border-color:var(--coral);}
+  .opt[disabled]{cursor:default;}
+  .feedback{margin-top:8px;font-size:.82rem;color:var(--ink-soft);display:none;}
+  .feedback.show{display:block;}
+
+  .score-bar{position:sticky;top:0;background:var(--ink);color:#fff;padding:8px 16px;font-size:.82rem;display:flex;justify-content:space-between;z-index:5;}
+
+  textarea{width:100%;min-height:100px;border:1px solid var(--rule);padding:10px;font-family:'Inter',sans-serif;font-size:.9rem;margin-top:10px;resize:vertical;}
+  details.answers{margin-top:10px;}
+  details.answers summary{cursor:pointer;color:var(--ink-soft);font-size:.85rem;}
+  details.answers .ans-body{margin-top:8px;font-size:.85rem;color:var(--ink-soft);}
+  details.answers .ans-body pre{font-family:'JetBrains Mono',monospace;white-space:pre-wrap;font-size:.82rem;}
+
+  footer{padding:24px 48px 40px 68px;font-size:.78rem;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<div class="score-bar">
+  <span>Year 10 Computer Science · Error Detection</span>
+  <span id="scoreDisplay">Quiz score: 0 / 0</span>
+</div>
+
+<div class="page">
+
+  <div class="cover">
+    <span class="tag">IGCSE Computer Science · Year 10</span>
+    <h1>Methods of Error Detection</h1>
+    <p class="sub">Data gets corrupted in transmission more often than you'd think. This workbook covers the methods computers use to catch — and sometimes even fix — the damage.</p>
+    <div class="fields">
+      <label>Name<input type="text"></label>
+      <label>Class<input type="text"></label>
+      <label>Date<input type="text"></label>
+    </div>
+  </div>
+
+  <section id="s1">
+    <span class="num">1</span>
+    <h2>Key vocabulary</h2>
+    <p class="lead">Open each card before starting the Lab — the calculators and the quiz use these terms without re-explaining them.</p>
+    <div class="concept-grid">
+      <div class="concept">
+        <div class="term">Parity check <span class="plus">+</span></div>
+        <div class="detail">An extra <strong>parity bit</strong> is added to a block of data so the total count of 1-bits matches an agreed rule. With <strong>even parity</strong>, the total number of 1s (including the parity bit) must be even. With <strong>odd parity</strong>, it must be odd. If a single bit is corrupted in transit, the count's parity flips and the error is detected.
+          <div class="example">data 1010001 (three 1s) + even parity bit 1 &rarr; 10100011 (four 1s, even)</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">Parity block (2D parity) <span class="plus">+</span></div>
+        <div class="detail">Arrange data as a grid and calculate a parity bit for every <strong>row</strong> and every <strong>column</strong>. A single corrupted bit will fail exactly one row's check and exactly one column's check — and the row and column meet at exactly one cell. This means a parity block can not only detect a single-bit error but <strong>locate and correct</strong> it, which a simple parity check cannot do.
+          <div class="example">row 2 fails + column 3 fails &rarr; the error must be at row 2, column 3</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">Checksum <span class="plus">+</span></div>
+        <div class="detail">The sender adds up the values in a block of data to produce a single <strong>checksum</strong> value, which is sent along with the data. The receiver repeats the same calculation on the data it received; if the two checksums don't match, an error has occurred somewhere in the block.
+          <div class="example">checksum = sum of all data values (often reduced using modulo)</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">Check digits <span class="plus">+</span></div>
+        <div class="detail">A <strong>check digit</strong> is an extra digit calculated from the other digits in a code (like a barcode or ID number) and attached to the end. It is recalculated when the code is used, to catch mistakes such as a mistyped or transposed digit — common in human data entry.
+          <div class="example">barcodes, ISBNs, bank account numbers all use check digits</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">Modulo-11 check digit <span class="plus">+</span></div>
+        <div class="detail">Each digit is multiplied by a descending <strong>weight</strong>, the products are summed, and the sum is divided by 11. The <strong>remainder</strong> is subtracted from 11 to give the check digit (if the result is 11, use 0; if it's 10, use the letter X). Because each position has a different weight, this method can detect <strong>transposition errors</strong> (two digits swapped) that a simple sum-based checksum would miss.
+          <div class="example">check digit = 11 &minus; (weighted sum MOD 11)</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">ISBN-13 check digit <span class="plus">+</span></div>
+        <div class="detail">Every book's 13-digit ISBN ends with a check digit calculated from the first 12. Each digit is multiplied by an alternating weight of <strong>1 and 3</strong>, the products are summed, and the check digit is whatever must be added to reach the next multiple of 10 (sum MOD 10, subtracted from 10).
+          <div class="example">check digit = (10 &minus; (weighted sum MOD 10)) MOD 10</div>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="term">Echo check <span class="plus">+</span></div>
+        <div class="detail">The <strong>sender</strong> transmits data to the <strong>receiver</strong>, which immediately sends ("echoes") it straight back. The sender compares the echo to what it originally sent; a mismatch means an error occurred and a <strong>retransmission</strong> is requested. Simple, but it roughly doubles network traffic and can't correct the error itself.
+          <div class="example">sender &rarr; receiver &rarr; echo back &rarr; sender compares</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <span class="num">2</span>
+    <h2>The Error Detection Lab</h2>
+    <p class="lead">Six calculators — one for each method. Try corrupting the data in each and watch how (or whether) the check catches it.</p>
+
+    <div class="tabbar">
+      <button class="tab active" data-tab="parity">Parity bit</button>
+      <button class="tab" data-tab="block">Parity block</button>
+      <button class="tab" data-tab="checksum">Checksum</button>
+      <button class="tab" data-tab="mod11">Modulo-11</button>
+      <button class="tab" data-tab="isbn">ISBN-13</button>
+      <button class="tab" data-tab="echo">Echo check</button>
+    </div>
+
+    <!-- PARITY BIT -->
+    <div class="tabpanel active" id="tab-parity">
+      <div class="lab-grid">
+        <div class="controls">
+          <div class="ctrl"><label>Data bits (click to flip) <span class="chip a">DATA</span></label>
+            <div class="bit-row" id="parity_bits"></div></div>
+          <div class="ctrl"><label>Parity scheme <span class="chip c">PARITY</span></label>
+            <select id="parity_scheme"><option value="even" selected>Even parity</option><option value="odd">Odd parity</option></select></div>
+          <div class="btn-row"><button class="btn secondary" id="parity_corrupt">Flip a random bit (simulate error)</button><button class="btn secondary" id="parity_reset">Reset</button></div>
+        </div>
+        <div class="panels">
+          <div class="panel formula"><div class="head">Formula <span class="info" title="The general method.">i</span></div><div class="body" id="parity_formula"></div></div>
+          <div class="panel sub"><div class="head">Substitution <span class="info" title="Your bits plugged in.">i</span></div><div class="body" id="parity_sub"></div></div>
+          <div class="panel result"><div class="head">Result <span class="info" title="What the receiver finds.">i</span></div><div class="body" id="parity_result"></div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" data-run="parity">Trace the check</button></div>
+      <div class="log-box" id="parity_log"><p class="empty-note">Press Trace to see the check worked out step by step.</p></div>
+    </div>
+
+    <!-- PARITY BLOCK -->
+    <div class="tabpanel" id="tab-block">
+      <p class="note-box">This block uses even parity. Click "Corrupt a random bit" to flip one data cell, then trace the check to see how the row and column together pinpoint it.</p>
+      <div class="lab-grid">
+        <div class="controls">
+          <div id="block_grid"></div>
+          <div class="btn-row"><button class="btn secondary" id="block_corrupt">Corrupt a random bit</button><button class="btn secondary" id="block_reset">Reset</button></div>
+        </div>
+        <div class="panels">
+          <div class="panel formula"><div class="head">Formula <span class="info" title="The general method.">i</span></div><div class="body"><ol><li>Calculate a parity bit for every row</li><li>Calculate a parity bit for every column</li><li>If data changes, recompute and compare both</li></ol></div></div>
+          <div class="panel result"><div class="head">Result <span class="info" title="Where the error check lands.">i</span></div><div class="body" id="block_result"></div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" data-run="block">Trace the check</button></div>
+      <div class="log-box" id="block_log"><p class="empty-note">Press Trace to see how the row and column parities locate an error.</p></div>
+    </div>
+
+    <!-- CHECKSUM -->
+    <div class="tabpanel" id="tab-checksum">
+      <div class="lab-grid">
+        <div class="controls">
+          <div class="ctrl"><label>Value 1</label><input type="number" id="cs_v0" value="45" min="0" max="255"></div>
+          <div class="ctrl"><label>Value 2</label><input type="number" id="cs_v1" value="210" min="0" max="255"></div>
+          <div class="ctrl"><label>Value 3</label><input type="number" id="cs_v2" value="88" min="0" max="255"></div>
+          <div class="ctrl"><label>Value 4</label><input type="number" id="cs_v3" value="132" min="0" max="255"></div>
+          <p class="note-box">Simplified for teaching: checksum = (sum of values) MOD 256.</p>
+          <div class="btn-row"><button class="btn secondary" id="cs_corrupt">Corrupt a random value</button><button class="btn secondary" id="cs_reset">Reset</button></div>
+        </div>
+        <div class="panels">
+          <div class="panel formula"><div class="head">Formula <span class="info" title="The general method.">i</span></div><div class="body"><ol><li>Checksum = (sum of all values) MOD 256</li><li>Receiver recalculates and compares</li></ol></div></div>
+          <div class="panel sub"><div class="head">Substitution <span class="info" title="Your numbers plugged in.">i</span></div><div class="body" id="cs_sub"></div></div>
+          <div class="panel result"><div class="head">Result <span class="info" title="What the receiver finds.">i</span></div><div class="body" id="cs_result"></div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" data-run="checksum">Trace the check</button></div>
+      <div class="log-box" id="checksum_log"><p class="empty-note">Press Trace to see the checksum worked out step by step.</p></div>
+    </div>
+
+    <!-- MODULO-11 -->
+    <div class="tabpanel" id="tab-mod11">
+      <div class="lab-grid">
+        <div class="controls">
+          <div class="ctrl"><label>6-digit code <span class="chip a">DIGITS</span></label>
+            <div class="digit-row" id="mod11_digits"></div></div>
+          <p class="note-box">Weights 7, 6, 5, 4, 3, 2 are applied left to right.</p>
+          <div class="btn-row"><button class="btn secondary" id="mod11_corrupt">Change a random digit</button><button class="btn secondary" id="mod11_swap">Swap two digits (transposition)</button><button class="btn secondary" id="mod11_reset">Reset</button></div>
+        </div>
+        <div class="panels">
+          <div class="panel formula"><div class="head">Formula <span class="info" title="The general method.">i</span></div><div class="body"><ol><li>Multiply each digit by its weight (7 down to 2)</li><li>Sum the products</li><li>Check digit = 11 &minus; (sum MOD 11)</li></ol></div></div>
+          <div class="panel sub"><div class="head">Substitution <span class="info" title="Your digits plugged in.">i</span></div><div class="body" id="mod11_sub"></div></div>
+          <div class="panel result"><div class="head">Result <span class="info" title="What the check finds.">i</span></div><div class="body" id="mod11_result"></div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" data-run="mod11">Trace the check</button></div>
+      <div class="log-box" id="mod11_log"><p class="empty-note">Press Trace to see the modulo-11 check digit worked out step by step.</p></div>
+    </div>
+
+    <!-- ISBN-13 -->
+    <div class="tabpanel" id="tab-isbn">
+      <div class="lab-grid">
+        <div class="controls">
+          <div class="ctrl"><label>First 12 digits <span class="chip a">DIGITS</span></label>
+            <div class="digit-row" id="isbn_digits"></div></div>
+          <p class="note-box">Weights alternate 1, 3, 1, 3 ... across the 12 digits. Default shown is a real published ISBN-13.</p>
+          <div class="btn-row"><button class="btn secondary" id="isbn_corrupt">Change a random digit</button><button class="btn secondary" id="isbn_reset">Reset</button></div>
+        </div>
+        <div class="panels">
+          <div class="panel formula"><div class="head">Formula <span class="info" title="The general method.">i</span></div><div class="body"><ol><li>Multiply each digit by alternating weights 1, 3, 1, 3 ...</li><li>Sum the products</li><li>Check digit = (10 &minus; (sum MOD 10)) MOD 10</li></ol></div></div>
+          <div class="panel sub"><div class="head">Substitution <span class="info" title="Your digits plugged in.">i</span></div><div class="body" id="isbn_sub"></div></div>
+          <div class="panel result"><div class="head">Result <span class="info" title="What the check finds.">i</span></div><div class="body" id="isbn_result"></div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" data-run="isbn">Trace the check</button></div>
+      <div class="log-box" id="isbn_log"><p class="empty-note">Press Trace to see the ISBN-13 check digit worked out step by step.</p></div>
+    </div>
+
+    <!-- ECHO CHECK -->
+    <div class="tabpanel" id="tab-echo">
+      <div class="lab-grid">
+        <div class="controls">
+          <div class="ctrl"><label>Message to send <span class="chip a">DATA</span></label>
+            <input type="text" id="echo_msg" value="HELLO" maxlength="12"></div>
+          <div class="btn-row">
+            <button class="btn secondary" id="echo_clean">Send (clean transmission)</button>
+            <button class="btn secondary" id="echo_corrupt">Send (corrupted echo)</button>
+          </div>
+        </div>
+        <div>
+          <div class="panel formula" style="margin-bottom:12px;"><div class="head">Formula</div><div class="body"><ol><li>Sender transmits data to receiver</li><li>Receiver immediately echoes it back</li><li>Sender compares the echo to the original</li></ol></div></div>
+          <div class="echo-flow" id="echo_flow"><p class="empty-note">Press a button to simulate a transmission.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note-box" style="margin-top:16px;">These examples simplify real-world methods for teaching clarity — e.g. the checksum here uses a single MOD rather than the one's-complement arithmetic used by real network checksums.</p>
+  </section>
+
+  <section id="s3">
+    <span class="num">3</span>
+    <h2>Check your understanding</h2>
+    <p class="lead">Try each calculator in the Lab before answering — several questions reuse the exact numbers from the worked examples.</p>
+    <div id="quiz"></div>
+  </section>
+
+  <section id="s4">
+    <span class="num">4</span>
+    <h2>Exam-style challenge</h2>
+    <p class="lead"><strong>(a) Calculation.</strong> A 7-bit code 1010001 is to be transmitted using even parity. Calculate the parity bit and state the full 8-bit code that would be transmitted.</p>
+    <textarea placeholder="Show your working for part (a) here..."></textarea>
+    <details class="answers">
+      <summary>Show a model answer for part (a)</summary>
+      <div class="ans-body"><pre>Step 1 - Count the 1-bits in 1010001
+  1,0,1,0,0,0,1 -> three 1-bits (an odd number)
+
+Step 2 - Even parity needs the TOTAL count of 1-bits to be even
+  three is odd, so the parity bit must be 1 (making the total four, which is even)
+
+Step 3 - Transmitted code = data bits + parity bit
+  1010001 + 1 = 10100011</pre></div>
+    </details>
+
+    <p class="lead" style="margin-top:24px;"><strong>(b) Calculation.</strong> Using the modulo-11 method with weights 7, 6, 5, 4, 3, 2, calculate the check digit for the 6-digit code 834196.</p>
+    <textarea placeholder="Show your working for part (b) here..."></textarea>
+    <details class="answers">
+      <summary>Show a model answer for part (b)</summary>
+      <div class="ans-body"><pre>Step 1 - Multiply each digit by its weight
+  8x7=56, 3x6=18, 4x5=20, 1x4=4, 9x3=27, 6x2=12
+
+Step 2 - Sum the products
+  56+18+20+4+27+12 = 137
+
+Step 3 - Divide by 11 and find the remainder
+  137 / 11 = 12 remainder 5
+
+Step 4 - Check digit = 11 - remainder
+  11 - 5 = 6
+
+The code transmitted would be 8341966.</pre></div>
+    </details>
+
+    <p class="lead" style="margin-top:24px;"><strong>(c) Discuss.</strong> Explain why a parity block (2D parity) can correct a single-bit error, while a simple single parity check can only detect that an error has occurred.</p>
+    <textarea placeholder="Write your answer for part (c) here..."></textarea>
+    <details class="answers">
+      <summary>Show a model answer for part (c)</summary>
+      <div class="ans-body">A single parity check only tells you that the overall count of 1-bits no longer matches the expected parity — it has no way of knowing which bit, out of potentially many, caused the problem. A parity block adds a parity bit for every row and every column. A single corrupted bit will cause exactly one row's parity check to fail and exactly one column's parity check to fail. Since only one cell lies at the intersection of that specific row and that specific column, the position of the error is uniquely identified, so it can simply be flipped back — correcting the error rather than just detecting it.</div>
+    </details>
+  </section>
+
+  <footer>Computer Science Workbook · IGCSE · Methods of Error Detection</footer>
+</div>
+
+<script>
+document.querySelectorAll('.concept').forEach(c=>{ c.addEventListener('click', ()=> c.classList.toggle('open')); });
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+function fmt(n){ return n.toLocaleString('en-GB'); }
+function playLines(log, lines){
+  log.innerHTML = '';
+  let i = 0;
+  function step(){
+    if(i >= lines.length) return;
+    const [cls, tag, text] = lines[i];
+    Array.from(log.children).forEach(c=>c.classList.remove('cur'));
+    const div = document.createElement('div');
+    div.className = 'line cur';
+    div.innerHTML = `<span class="tag chip ${cls}">${tag}</span>${text}`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    i++;
+    setTimeout(step, 650);
+  }
+  step();
+}
+
+/* ---------------- PARITY BIT ---------------- */
+let parityBits = [1,0,1,0,0,0,1];
+function renderParityBits(){
+  const row = document.getElementById('parity_bits');
+  row.innerHTML = '';
+  parityBits.forEach((b, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'bit-btn' + (b ? ' on' : '');
+    btn.textContent = b;
+    btn.onclick = ()=>{ parityBits[i] = parityBits[i] ? 0 : 1; renderParityBits(); renderParityPanels(); };
+    row.appendChild(btn);
+  });
+}
+function renderParityPanels(){
+  const scheme = document.getElementById('parity_scheme').value;
+  const ones = parityBits.reduce((a,b)=>a+b,0);
+  const needEven = scheme === 'even';
+  const parityBit = needEven ? (ones % 2 === 0 ? 0 : 1) : (ones % 2 === 0 ? 1 : 0);
+  const totalOnes = ones + parityBit;
+  document.getElementById('parity_formula').innerHTML =
+    `<ol><li>Count the 1-bits in the data</li><li>${needEven?'Even':'Odd'} parity: choose the parity bit so the total count of 1s is ${needEven?'even':'odd'}</li></ol>`;
+  document.getElementById('parity_sub').textContent =
+    `data = ${parityBits.join('')}\n1-bits in data = ${ones}\nscheme = ${scheme} parity\nparity bit chosen = ${parityBit}`;
+  document.getElementById('parity_result').innerHTML =
+    `transmitted code = <span class="hi">${parityBits.join('')}${parityBit}</span>\ntotal 1-bits = ${totalOnes} (${totalOnes%2===0?'even':'odd'}) \u2192 <span class="fin">valid ${scheme} parity</span>`;
+}
+document.getElementById('parity_scheme').addEventListener('change', renderParityPanels);
+document.getElementById('parity_reset').addEventListener('click', ()=>{ parityBits=[1,0,1,0,0,0,1]; renderParityBits(); renderParityPanels(); });
+document.getElementById('parity_corrupt').addEventListener('click', ()=>{
+  const i = Math.floor(Math.random()*parityBits.length);
+  parityBits[i] = parityBits[i] ? 0 : 1;
+  renderParityBits(); renderParityPanels();
+});
+renderParityBits(); renderParityPanels();
+
+document.querySelector('[data-run="parity"]').addEventListener('click', ()=>{
+  const scheme = document.getElementById('parity_scheme').value;
+  const ones = parityBits.reduce((a,b)=>a+b,0);
+  const needEven = scheme === 'even';
+  const parityBit = needEven ? (ones % 2 === 0 ? 0 : 1) : (ones % 2 === 0 ? 1 : 0);
+  const lines = [
+    ['a','DATA', `${parityBits.join('')} has ${ones} one-bit(s)`],
+    ['c','PARITY', `${scheme} parity needs the total to be ${needEven?'even':'odd'}`],
+    ['b','PROCESS', `parity bit set to ${parityBit}`],
+    ['c','OUTPUT', `transmitted code = ${parityBits.join('')}${parityBit}`]
+  ];
+  playLines(document.getElementById('parity_log'), lines);
+});
+
+/* ---------------- PARITY BLOCK ---------------- */
+const blockOriginal = [[1,0,1,1],[0,1,1,0],[1,1,0,0],[0,0,1,1]];
+let blockData = blockOriginal.map(r=>r.slice());
+let blockFlipped = null;
+
+function rowParity(r){ return r.reduce((a,b)=>a^b,0); }
+function colParity(grid, c){ return grid.reduce((a,row)=>a^row[c],0); }
+
+function renderBlock(){
+  const wrap = document.getElementById('block_grid');
+  wrap.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'grid4';
+  const origRowP = blockOriginal.map(rowParity);
+  const origColP = [0,1,2,3].map(c=>colParity(blockOriginal, c));
+  const curRowP = blockData.map(rowParity);
+  const curColP = [0,1,2,3].map(c=>colParity(blockData, c));
+
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = blockData[r][c];
+      if(blockFlipped && blockFlipped[0]===r && blockFlipped[1]===c) cell.classList.add('flipped');
+      cell.onclick = ()=>{ blockData[r][c] = blockData[r][c] ? 0 : 1; blockFlipped=[r,c]; renderBlock(); renderBlockResult(); };
+      grid.appendChild(cell);
+    }
+    const pc = document.createElement('div');
+    pc.className = 'cell parity' + (curRowP[r] !== origRowP[r] ? ' mismatch' : '');
+    pc.textContent = origRowP[r];
+    grid.appendChild(pc);
+  }
+  for(let c=0;c<4;c++){
+    const pc = document.createElement('div');
+    pc.className = 'cell parity' + (curColP[c] !== origColP[c] ? ' mismatch' : '');
+    pc.textContent = origColP[c];
+    grid.appendChild(pc);
+  }
+  const corner = document.createElement('div');
+  corner.className = 'cell corner';
+  corner.textContent = '\u2022';
+  grid.appendChild(corner);
+  wrap.appendChild(grid);
+}
+function renderBlockResult(){
+  const origRowP = blockOriginal.map(rowParity);
+  const origColP = [0,1,2,3].map(c=>colParity(blockOriginal, c));
+  const curRowP = blockData.map(rowParity);
+  const curColP = [0,1,2,3].map(c=>colParity(blockData, c));
+  const badRow = curRowP.findIndex((v,i)=>v!==origRowP[i]);
+  const badCol = curColP.findIndex((v,i)=>v!==origColP[i]);
+  const result = document.getElementById('block_result');
+  if(badRow === -1 && badCol === -1){
+    result.innerHTML = `<span class="fin">All row and column parities match.</span>\nNo error detected.`;
+  } else {
+    result.innerHTML = `Row ${badRow+1} parity: <span class="bad">mismatch</span>\nColumn ${badCol+1} parity: <span class="bad">mismatch</span>\n\nIntersection \u2192 <span class="fin">error located at row ${badRow+1}, column ${badCol+1}</span>\nFlipping that bit back corrects it.`;
+  }
+}
+document.getElementById('block_corrupt').addEventListener('click', ()=>{
+  blockData = blockOriginal.map(r=>r.slice());
+  const r = Math.floor(Math.random()*4), c = Math.floor(Math.random()*4);
+  blockData[r][c] = blockData[r][c] ? 0 : 1;
+  blockFlipped = [r,c];
+  renderBlock(); renderBlockResult();
+});
+document.getElementById('block_reset').addEventListener('click', ()=>{
+  blockData = blockOriginal.map(r=>r.slice());
+  blockFlipped = null;
+  renderBlock(); renderBlockResult();
+});
+renderBlock(); renderBlockResult();
+
+document.querySelector('[data-run="block"]').addEventListener('click', ()=>{
+  const origRowP = blockOriginal.map(rowParity);
+  const origColP = [0,1,2,3].map(c=>colParity(blockOriginal, c));
+  const curRowP = blockData.map(rowParity);
+  const curColP = [0,1,2,3].map(c=>colParity(blockData, c));
+  const badRow = curRowP.findIndex((v,i)=>v!==origRowP[i]);
+  const badCol = curColP.findIndex((v,i)=>v!==origColP[i]);
+  let lines;
+  if(badRow === -1 && badCol === -1){
+    lines = [
+      ['a','ROW PARITY', `All 4 row checks still match`],
+      ['b','COLUMN PARITY', `All 4 column checks still match`],
+      ['c','OUTPUT', `No error detected \u2014 try corrupting a bit first`]
+    ];
+  } else {
+    lines = [
+      ['a','ROW PARITY', `Row ${badRow+1} no longer matches its stored parity bit`],
+      ['b','COLUMN PARITY', `Column ${badCol+1} no longer matches its stored parity bit`],
+      ['c','PROCESS', `The two mismatches meet at exactly one cell`],
+      ['c','OUTPUT', `Error located and corrected at row ${badRow+1}, column ${badCol+1}`]
+    ];
+  }
+  playLines(document.getElementById('block_log'), lines);
+});
+
+/* ---------------- CHECKSUM ---------------- */
+function csValues(){ return [0,1,2,3].map(i=>+document.getElementById('cs_v'+i).value); }
+function renderChecksum(){
+  const vals = csValues();
+  const sum = vals.reduce((a,b)=>a+b,0);
+  const checksum = sum % 256;
+  document.getElementById('cs_sub').textContent =
+    `values = ${vals.join(', ')}\nsum = ${vals.join(' + ')} = ${sum}\nchecksum = ${sum} MOD 256 = ${checksum}`;
+  document.getElementById('cs_result').innerHTML =
+    `Transmitted packet = [${vals.join(', ')}] + checksum <span class="hi">${checksum}</span>`;
+}
+[0,1,2,3].forEach(i=>document.getElementById('cs_v'+i).addEventListener('input', renderChecksum));
+document.getElementById('cs_reset').addEventListener('click', ()=>{
+  const defaults=[45,210,88,132];
+  defaults.forEach((v,i)=>document.getElementById('cs_v'+i).value=v);
+  renderChecksum();
+});
+document.getElementById('cs_corrupt').addEventListener('click', ()=>{
+  const i = Math.floor(Math.random()*4);
+  const el = document.getElementById('cs_v'+i);
+  el.value = Math.floor(Math.random()*256);
+  renderChecksum();
+});
+renderChecksum();
+
+document.querySelector('[data-run="checksum"]').addEventListener('click', ()=>{
+  const vals = csValues();
+  const sum = vals.reduce((a,b)=>a+b,0);
+  const checksum = sum % 256;
+  const defaults=[45,210,88,132];
+  const originalSum = defaults.reduce((a,b)=>a+b,0) % 256;
+  const changed = JSON.stringify(vals) !== JSON.stringify(defaults);
+  const lines = [
+    ['a','DATA', `values received: ${vals.join(', ')}`],
+    ['b','PROCESS', `sum = ${sum}, checksum = ${sum} MOD 256 = ${checksum}`],
+    ['c','OUTPUT', changed ? `recalculated checksum ${checksum} vs original ${originalSum} \u2192 ${checksum===originalSum?'coincidentally matches (checksums don\u2019t catch every error)':'mismatch \u2014 error detected'}` : `checksum ${checksum} matches \u2014 no error detected`]
+  ];
+  playLines(document.getElementById('checksum_log'), lines);
+});
+
+/* ---------------- MODULO-11 ---------------- */
+let mod11Digits = [8,3,4,1,9,6];
+const mod11Weights = [7,6,5,4,3,2];
+function renderMod11Digits(){
+  const row = document.getElementById('mod11_digits');
+  row.innerHTML = '';
+  mod11Digits.forEach((d,i)=>{
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min=0; inp.max=9; inp.value = d;
+    inp.oninput = ()=>{ mod11Digits[i] = Math.max(0, Math.min(9, +inp.value||0)); renderMod11Panels(); };
+    row.appendChild(inp);
+  });
+}
+function computeMod11(digits){
+  const products = digits.map((d,i)=>d*mod11Weights[i]);
+  const sum = products.reduce((a,b)=>a+b,0);
+  const remainder = sum % 11;
+  let cd = 11 - remainder;
+  if(cd === 11) cd = 0;
+  const display = cd === 10 ? 'X' : cd;
+  return {products, sum, remainder, cd, display};
+}
+function renderMod11Panels(){
+  const r = computeMod11(mod11Digits);
+  document.getElementById('mod11_sub').textContent =
+    `digits = ${mod11Digits.join(', ')}\nweights = ${mod11Weights.join(', ')}\nproducts = ${r.products.join(', ')}\nsum = ${r.products.join(' + ')} = ${r.sum}\nremainder = ${r.sum} MOD 11 = ${r.remainder}`;
+  document.getElementById('mod11_result').innerHTML =
+    `check digit = 11 \u2212 ${r.remainder} = <span class="hi">${r.display}</span>\nfull code = <span class="fin">${mod11Digits.join('')}${r.display}</span>`;
+}
+document.getElementById('mod11_reset').addEventListener('click', ()=>{ mod11Digits=[8,3,4,1,9,6]; renderMod11Digits(); renderMod11Panels(); });
+document.getElementById('mod11_corrupt').addEventListener('click', ()=>{
+  const i = Math.floor(Math.random()*6);
+  mod11Digits[i] = Math.floor(Math.random()*10);
+  renderMod11Digits(); renderMod11Panels();
+});
+document.getElementById('mod11_swap').addEventListener('click', ()=>{
+  const i = Math.floor(Math.random()*6);
+  let j = Math.floor(Math.random()*6);
+  while(j===i) j = Math.floor(Math.random()*6);
+  const tmp = mod11Digits[i]; mod11Digits[i]=mod11Digits[j]; mod11Digits[j]=tmp;
+  renderMod11Digits(); renderMod11Panels();
+});
+renderMod11Digits(); renderMod11Panels();
+
+document.querySelector('[data-run="mod11"]').addEventListener('click', ()=>{
+  const r = computeMod11(mod11Digits);
+  const original = computeMod11([8,3,4,1,9,6]);
+  const changed = JSON.stringify(mod11Digits) !== JSON.stringify([8,3,4,1,9,6]);
+  const lines = [
+    ['a','WEIGHT', `weights 7,6,5,4,3,2 applied to ${mod11Digits.join('')}`],
+    ['b','PROCESS', `weighted sum = ${r.sum}, remainder = ${r.sum} MOD 11 = ${r.remainder}`],
+    ['c','OUTPUT', `check digit = 11 \u2212 ${r.remainder} = ${r.display}` + (changed ? (r.display===original.display ? ' \u2014 unchanged (rare)' : ' \u2014 differs from the original check digit, error detected') : '')]
+  ];
+  playLines(document.getElementById('mod11_log'), lines);
+});
+
+/* ---------------- ISBN-13 ---------------- */
+let isbnDigits = [9,7,8,0,1,3,2,3,5,0,8,8];
+function isbnWeights(){ return isbnDigits.map((d,i)=> i%2===0?1:3); }
+function renderIsbnDigits(){
+  const row = document.getElementById('isbn_digits');
+  row.innerHTML = '';
+  isbnDigits.forEach((d,i)=>{
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min=0; inp.max=9; inp.value = d;
+    inp.oninput = ()=>{ isbnDigits[i] = Math.max(0, Math.min(9, +inp.value||0)); renderIsbnPanels(); };
+    row.appendChild(inp);
+  });
+}
+function computeIsbn(digits){
+  const weights = digits.map((d,i)=> i%2===0?1:3);
+  const products = digits.map((d,i)=>d*weights[i]);
+  const sum = products.reduce((a,b)=>a+b,0);
+  const remainder = sum % 10;
+  const cd = (10 - remainder) % 10;
+  return {weights, products, sum, remainder, cd};
+}
+function renderIsbnPanels(){
+  const r = computeIsbn(isbnDigits);
+  document.getElementById('isbn_sub').textContent =
+    `digits = ${isbnDigits.join(', ')}\nweights = ${r.weights.join(', ')}\nproducts = ${r.products.join(', ')}\nsum = ${r.sum}\nremainder = ${r.sum} MOD 10 = ${r.remainder}`;
+  document.getElementById('isbn_result').innerHTML =
+    `check digit = (10 \u2212 ${r.remainder}) MOD 10 = <span class="hi">${r.cd}</span>\nfull ISBN-13 = <span class="fin">${isbnDigits.join('')}${r.cd}</span>`;
+}
+document.getElementById('isbn_reset').addEventListener('click', ()=>{ isbnDigits=[9,7,8,0,1,3,2,3,5,0,8,8]; renderIsbnDigits(); renderIsbnPanels(); });
+document.getElementById('isbn_corrupt').addEventListener('click', ()=>{
+  const i = Math.floor(Math.random()*12);
+  isbnDigits[i] = Math.floor(Math.random()*10);
+  renderIsbnDigits(); renderIsbnPanels();
+});
+renderIsbnDigits(); renderIsbnPanels();
+
+document.querySelector('[data-run="isbn"]').addEventListener('click', ()=>{
+  const r = computeIsbn(isbnDigits);
+  const original = computeIsbn([9,7,8,0,1,3,2,3,5,0,8,8]);
+  const changed = JSON.stringify(isbnDigits) !== JSON.stringify([9,7,8,0,1,3,2,3,5,0,8,8]);
+  const lines = [
+    ['a','WEIGHT', `alternating weights 1,3 applied to the 12 digits`],
+    ['b','PROCESS', `weighted sum = ${r.sum}, remainder = ${r.sum} MOD 10 = ${r.remainder}`],
+    ['c','OUTPUT', `check digit = (10 \u2212 ${r.remainder}) MOD 10 = ${r.cd}` + (changed ? (r.cd===original.cd ? ' \u2014 unchanged (rare)' : ' \u2014 differs from the original, error detected') : '')]
+  ];
+  playLines(document.getElementById('isbn_log'), lines);
+});
+
+/* ---------------- ECHO CHECK ---------------- */
+function renderEchoFlow(steps){
+  const flow = document.getElementById('echo_flow');
+  flow.innerHTML = '';
+  steps.forEach(([cls, text])=>{
+    const div = document.createElement('div');
+    div.className = 'step' + (cls ? ' '+cls : '');
+    div.textContent = text;
+    flow.appendChild(div);
+  });
+}
+document.getElementById('echo_clean').addEventListener('click', ()=>{
+  const msg = document.getElementById('echo_msg').value || 'HELLO';
+  renderEchoFlow([
+    [null, `Sender transmits: "${msg}"`],
+    [null, `Receiver receives: "${msg}"`],
+    [null, `Receiver echoes back: "${msg}"`],
+    ['good', `Sender compares echo to original: MATCH \u2014 transmission assumed successful`]
+  ]);
+});
+document.getElementById('echo_corrupt').addEventListener('click', ()=>{
+  const msg = document.getElementById('echo_msg').value || 'HELLO';
+  let corrupted = msg.split('');
+  if(corrupted.length > 0){
+    const i = Math.floor(Math.random()*corrupted.length);
+    corrupted[i] = corrupted[i] === 'X' ? 'Q' : 'X';
+  }
+  corrupted = corrupted.join('');
+  renderEchoFlow([
+    [null, `Sender transmits: "${msg}"`],
+    [null, `Receiver receives: "${msg}"`],
+    ['bad', `Receiver echoes back (corrupted in transit): "${corrupted}"`],
+    ['bad', `Sender compares echo to original: MISMATCH \u2014 error detected, sender requests retransmission`]
+  ]);
+});
+
+/* ---------------- Quiz ---------------- */
+const QUIZ = [
+  {q:'A 7-bit code has four 1-bits. Using even parity, what should the parity bit be?', opts:['0','1','Either 0 or 1','It cannot be determined'], correct:0,
+   fb:'Correct — four is already even, so the parity bit is 0 to keep the total even.'},
+  {q:'What is the main limitation of a simple (single) parity check?', opts:[
+      'It can detect an error but not say which bit is wrong, and it misses errors affecting an even number of bits',
+      'It can only be used with text data',
+      'It always corrects the error automatically',
+      'It requires the data to be sent twice'],
+   correct:0, fb:'Correct — a single parity check can detect most single-bit errors but can\u2019t locate them, and two flipped bits can cancel out and go unnoticed.'},
+  {q:'What makes a parity block (2D parity) more powerful than a simple parity check?', opts:[
+      'It uses odd parity instead of even parity',
+      'The intersection of a failed row and a failed column identifies the exact bit, allowing it to be corrected',
+      'It sends the data twice as fast',
+      'It does not need a parity bit at all'],
+   correct:1, fb:'Correct — combining row and column checks pinpoints the location of a single-bit error.'},
+  {q:'What is a checksum calculated from?', opts:[
+      'The time it took to send the data',
+      'The values in a block of data being transmitted',
+      'The receiver\u2019s IP address',
+      'The number of devices on the network'],
+   correct:1, fb:'Correct — a checksum is a value derived from the data itself, recalculated by the receiver to check for changes.'},
+  {q:'In the modulo-11 method, how is the check digit calculated from the weighted sum?', opts:[
+      'Check digit = weighted sum \u00d7 11',
+      'Check digit = 11 minus the remainder when the weighted sum is divided by 11',
+      'Check digit = the weighted sum divided by 2',
+      'Check digit = the first digit of the weighted sum'],
+   correct:1, fb:'Correct — subtracting the remainder from 11 gives the check digit (0 if the result is 11, X if it\u2019s 10).'},
+  {q:'Using weights 7, 6, 5, 4, 3, 2 on the code 834196, what is the weighted sum?', opts:['121 ','137','142','150'], correct:1,
+   fb:'Correct — (8\u00d77)+(3\u00d76)+(4\u00d75)+(1\u00d74)+(9\u00d73)+(6\u00d72) = 56+18+20+4+27+12 = 137.'},
+  {q:'Why can a weighted check digit method (like modulo-11) detect a transposition error (two digits swapped), while a simple sum of the digits cannot?', opts:[
+      'Because swapping digits changes the weighted sum (each position has a different weight), whereas a plain sum of digits is unaffected by their order',
+      'Because weighted methods always use more digits',
+      'Because transposition errors are impossible in any digital system',
+      'Because a plain sum always produces a larger number'],
+   correct:0, fb:'Correct — position-dependent weights make the result sensitive to the order of the digits, not just which digits are present.'},
+  {q:'In the ISBN-13 check digit method, what weights are applied to the first 12 digits?', opts:['1 and 2, alternating','1 and 3, alternating','All digits use weight 1','Weights descending from 12 to 1'], correct:1,
+   fb:'Correct — ISBN-13 alternates weights of 1 and 3 across the 12 digits.'},
+  {q:'What happens during an echo check?', opts:[
+      'The receiver sends the data straight back to the sender, who compares it to the original',
+      'The sender deletes the data after sending it',
+      'The receiver encrypts the data before storing it',
+      'The data is split into two separate networks'],
+   correct:0, fb:'Correct — the receiver echoes the data back so the sender can check nothing changed in transit.'},
+  {q:'What is a drawback of using an echo check?', opts:[
+      'It cannot be used over the Internet',
+      'It roughly doubles the amount of data that must be transmitted, and does not correct errors itself',
+      'It only works with image files',
+      'It is impossible to implement in software'],
+   correct:1, fb:'Correct — sending every message twice (there and back) adds overhead, and a mismatch only triggers a retransmission rather than a fix.'}
+];
+let answered = 0, correctCount = 0;
+function updateScore(){ document.getElementById('scoreDisplay').textContent = `Quiz score: ${correctCount} / ${answered}`; }
+function renderQuiz(){
+  const wrap = document.getElementById('quiz');
+  QUIZ.forEach((item, qi)=>{
+    const box = document.createElement('div');
+    box.className = 'q';
+    const p = document.createElement('p');
+    p.className = 'prompt';
+    p.textContent = `${qi+1}. ${item.q}`;
+    box.appendChild(p);
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    const fb = document.createElement('div');
+    fb.className = 'feedback';
+    item.opts.forEach((optText, oi)=>{
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.textContent = optText;
+      b.onclick = ()=>{
+        if(box.dataset.done) return;
+        box.dataset.done = '1';
+        answered++;
+        Array.from(opts.children).forEach((c,ci)=>{
+          c.disabled = true;
+          if(ci === item.correct) c.classList.add('correct');
+          else if(ci === oi) c.classList.add('wrong');
+        });
+        if(oi === item.correct) correctCount++;
+        fb.classList.add('show');
+        fb.textContent = (oi === item.correct ? 'Correct. ' : 'Not quite. ') + item.fb;
+        updateScore();
+      };
+      opts.appendChild(b);
+    });
+    box.appendChild(opts);
+    box.appendChild(fb);
+    wrap.appendChild(box);
+  });
+}
+renderQuiz();
+updateScore();
+</script>
+</body>
+</html>
